@@ -271,10 +271,13 @@
         
         <div class="sub-row">
             <div>
-                <div class="label">식대</div>
-                <div class="desc">비과세 고정 (월 20만 원)</div>
+                <div class="label">기본급</div>
+                <div class="desc">월급에서 식대와 수당을 제외한 금액</div>
             </div>
-            <div class="value" id="mealAllowance">200,000원</div>
+            <div class="flex-center">
+                <div class="value" id="basePay">0원</div>
+                <button class="copy-btn" onclick="copyText('basePay', this)">복사</button>
+            </div>
         </div>
 
         <div class="sub-row">
@@ -293,13 +296,10 @@
 
         <div class="sub-row">
             <div>
-                <div class="label">기본급</div>
-                <div class="desc">월급에서 식대와 수당을 제외한 금액</div>
+                <div class="label">식대</div>
+                <div class="desc">비과세 고정 (월 20만 원)</div>
             </div>
-            <div class="flex-center">
-                <div class="value" id="basePay">0원</div>
-                <button class="copy-btn" onclick="copyText('basePay', this)">복사</button>
-            </div>
+            <div class="value" id="mealAllowance">200,000원</div>
         </div>
     </div>
 </div>
@@ -334,10 +334,14 @@
         calculate();
     }
 
-    // 텍스트 복사 함수
+    // 텍스트 복사 함수 (원 제거 및 서식 없는 텍스트 복사)
     function copyText(elementId, btnElement) {
-        const textToCopy = document.getElementById(elementId).innerText;
+        let textToCopy = document.getElementById(elementId).innerText;
         
+        // 끝에 '원'이 포함되어 있으면 제거 (공백도 함께 다듬음)
+        textToCopy = textToCopy.replace(/원$/, '').trim();
+        
+        // 브라우저의 클립보드 API는 서식 없는 단순 텍스트만 복사합니다.
         navigator.clipboard.writeText(textToCopy).then(() => {
             const originalText = btnElement.innerText;
             btnElement.innerText = '복사완료!';
@@ -387,16 +391,17 @@
         const mealAllowance = 200000;
 
         let otHours = 72;
-        let otDescText = "월 48시간 x 150% = 월 (72)시간";
+        let otDescText = "월 48시간 x 150% = 월 72시간";
 
         if (totalSalary <= 30000000) {
             otHours = 30;
-            otDescText = "월 20시간 x 150% = 월 (30)시간";
+            otDescText = "월 20시간 x 150% = 월 30시간";
         }
 
         const totalCalcHours = 209 + otHours;
         const hourlyRate = monthlySalary / totalCalcHours; 
 
+        // 역산 순서 (식대, 수당 먼저 계산 후 기본급 도출)
         const overtimePay = Math.floor(hourlyRate * otHours);
         const basePay = monthlySalary - mealAllowance - overtimePay;
 
