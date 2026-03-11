@@ -42,32 +42,35 @@
             margin-bottom: 24px;
         }
 
-        .header h1 {
-            color: var(--primary-color);
-            font-size: 22px;
-            margin: 0 0 8px 0;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
+       .header h1 {
+    color: var(--primary-color);
+    font-size: 28px;  /* 22px -> 28px 확대 */
+    margin: 0 0 10px 0;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+}
 
-        .info-box {
-            background-color: rgba(71, 51, 255, 0.05);
-            border: 1px solid rgba(71, 51, 255, 0.2);
-            border-radius: 8px;
-            padding: 14px 16px;
-            margin-bottom: 24px;
-            font-size: 13px;
-            color: var(--primary-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-        }
+       .info-box {
+    background-color: rgba(71, 51, 255, 0.05);
+    border: 1px solid rgba(71, 51, 255, 0.2);
+    border-radius: 8px;
+    padding: 18px 20px; /* 여백 확대 */
+    margin-bottom: 24px;
+    font-size: 16px;    /* 13px -> 16px 확대 */
+    color: var(--primary-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+}
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
+       .form-group label {
+    display: block;
+    font-size: 18px; /* 14px -> 18px 확대 */
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 10px;
+}
         .form-group label {
             display: block;
             font-size: 14px;
@@ -80,42 +83,43 @@
             position: relative;
         }
 
-        .input-wrapper input {
-            width: 100%;
-            padding: 14px 40px 14px 16px;
-            font-size: 18px;
-            font-weight: 700;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-sizing: border-box;
-            outline: none;
-            transition: border-color 0.2s;
-            text-align: right;
-            color: var(--text-main);
-        }
+       .input-wrapper input {
+    width: 100%;
+    padding: 18px 50px 18px 20px; /* 여백 확대 */
+    font-size: 24px;              /* 18px -> 24px 확대 */
+    font-weight: 700;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: right;
+    color: var(--text-main);
+}
 
         .input-wrapper input:focus {
             border-color: var(--primary-color);
         }
 
-        .input-wrapper .unit {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-weight: 500;
-        }
+       .input-wrapper .unit {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 18px; /* 단위 글자 확대 */
+}
 
-        .message-box {
-            font-size: 13px;
-            margin-top: 10px;
-            display: none;
-            font-weight: 500;
-            line-height: 1.5;
-            padding: 10px;
-            border-radius: 6px;
-        }
+      .message-box {
+    font-size: 15px; /* 13px -> 15px 확대 */
+    margin-top: 10px;
+    display: none;
+    font-weight: 500;
+    line-height: 1.5;
+    padding: 14px;   /* 여백 확대 */
+    border-radius: 6px;
+}
 
         .warning {
             color: var(--danger-color);
@@ -128,18 +132,18 @@
         }
 
         .suggestion .apply-btn {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 4px 10px;
-            background-color: var(--suggest-color);
-            color: white;
-            border-radius: 4px;
-            text-decoration: none;
-            font-size: 12px;
-            cursor: pointer;
-            border: none;
-            font-weight: 600;
-        }
+    display: inline-block;
+    margin-top: 8px;
+    padding: 6px 14px; /* 버튼 크기 확대 */
+    background-color: var(--suggest-color);
+    color: white;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;   /* 12px -> 14px 확대 */
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+}}
 
         .suggestion .apply-btn:hover {
             background-color: #00a080;
@@ -159,67 +163,64 @@
         }
 
         .result-row.main {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 24px;
-        }
+    font-size: 20px; /* 16px -> 20px 확대 */
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 24px;
+}
 
-        .result-row.main .value {
-            color: var(--primary-color);
-            font-size: 22px;
-        }
+      .result-row.main .value {
+    color: var(--primary-color);
+    font-size: 28px; /* 22px -> 28px 확대 */
+}
+        
+       .composition-title {
+    font-size: 18px; /* 14px -> 18px 확대 */
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 12px;
+}
 
-        .composition-title {
-            font-size: 14px;
-            font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 12px;
-        }
+     .sub-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 18px; /* 14px -> 18px 확대 */
+    background-color: #f9fafb;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+.sub-row .label {
+    font-size: 18px; /* 14px -> 18px 확대 */
+    font-weight: 600;
+    color: var(--text-main);
+}
 
-        .sub-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            padding: 14px;
-            background-color: #f9fafb;
-            border-radius: 8px;
-            margin-bottom: 8px;
-        }
+.sub-row .desc {
+    font-size: 14px; /* 12px -> 14px 확대 */
+    color: var(--text-muted);
+    margin-top: 6px;
+    line-height: 1.4;
+}
 
-        .sub-row .label {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-main);
-        }
-
-        .sub-row .desc {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            line-height: 1.4;
-        }
-
-        .sub-row .value {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-main);
-            text-align: right;
-        }
-
-        /* 복사 버튼 스타일 */
+.sub-row .value {
+    font-size: 20px; /* 15px -> 20px 확대 */
+    font-weight: 700;
+    color: var(--text-main);
+    text-align: right;
+}
         .copy-btn {
-            background-color: #ffffff;
-            color: var(--text-muted);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 2px 8px;
-            font-size: 11px;
-            cursor: pointer;
-            margin-left: 8px;
-            transition: all 0.2s;
-            font-weight: 600;
-        }
+    background-color: #ffffff;
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 10px; /* 버튼 크기 확대 */
+    font-size: 13px;   /* 11px -> 13px 확대 */
+    cursor: pointer;
+    margin-left: 10px;
+    transition: all 0.2s;
+    font-weight: 600;
+}
 
         .copy-btn:hover {
             background-color: var(--primary-color);
