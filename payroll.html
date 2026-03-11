@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>최초 근로계약서 연봉 계산기</title>
+    <style>
+        :root {
+            /* 첨부해주신 로고의 푸른색을 메인 컬러로 지정했습니다 */
+            --primary-color: #4733FF;
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --danger-color: #ff3b3b;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .calculator-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 450px;
+            padding: 32px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 22px;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .info-box {
+            background-color: rgba(71, 51, 255, 0.05);
+            border: 1px solid rgba(71, 51, 255, 0.2);
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 40px 14px 16px;
+            font-size: 18px;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+            text-align: right;
+            color: var(--text-main);
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .input-wrapper .unit {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .warning {
+            color: var(--danger-color);
+            font-size: 13px;
+            margin-top: 10px;
+            display: none;
+            font-weight: 500;
+            line-height: 1.5;
+            background-color: #fff0f0;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .result-section {
+            border-top: 2px dashed var(--border-color);
+            padding-top: 24px;
+            margin-top: 24px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .result-row.main {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 24px;
+        }
+
+        .result-row.main .value {
+            color: var(--primary-color);
+            font-size: 22px;
+        }
+
+        .composition-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .sub-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 14px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .sub-row .label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .sub-row .desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .sub-row .value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-card">
+    <div class="header">
+        <h1>최초 근로계약서 연봉 계산기</h1>
+    </div>
+
+    <div class="info-box">
+        <span id="yearLabel">당해연도 최저임금 (월)</span>
+        <span id="minWageDisplay">- 원</span>
+    </div>
+
+    <div class="form-group">
+        <label for="totalSalary">총 연봉 (직접 입력)</label>
+        <div class="input-wrapper">
+            <input type="text" id="totalSalary" placeholder="0" oninput="handleInput(this)">
+            <span class="unit">원</span>
+        </div>
+        <div class="warning" id="warningText"></div>
+    </div>
+
+    <div class="result-section">
+        <div class="result-row main">
+            <span>월급여 (세전)</span>
+            <span class="value" id="monthlySalary">0원</span>
+        </div>
+
+        <div class="composition-title">임금 구성</div>
+        
+        <div class="sub-row">
+            <div>
+                <div class="label">기본급</div>
+                <div class="desc">자동계산 (역산 방식)</div>
+            </div>
+            <div class="value" id="basePay">0원</div>
+        </div>
+
+        <div class="sub-row">
+            <div>
+                <div class="label">연장근로수당</div>
+                <div class="desc" id="otDesc">연봉에 따라 자동 적용</div>
+            </div>
+            <div class="value" id="overtimePay">0원</div>
+        </div>
+
+        <div class="sub-row">
+            <div>
+                <div class="label">식대</div>
+                <div class="desc">비과세 고정 (월 20만 원)</div>
+            </div>
+            <div class="value" id="mealAllowance">200,000원</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 연도별 최저임금 데이터 세팅
+    const minWageData = {
+        2024: { hourly: 9860, monthly: 2060740 },
+        2025: { hourly: 10030, monthly: 2096270 },
+        2026: { hourly: 10320, monthly: 2156880 }
+    };
+
+    // 현재 KST 기준 연도를 가져옵니다. (현재 2026년으로 적용됨)
+    const currentYear = new Date().getFullYear();
+    const currentMinWage = minWageData[currentYear] || minWageData[2026]; 
+    const minMonthlyWage = currentMinWage.monthly;
+
+    // 초기 렌더링 시 최저임금 반영
+    document.getElementById('yearLabel').innerText = `${currentYear}년 최저임금 (월)`;
+    document.getElementById('minWageDisplay').innerText = minMonthlyWage.toLocaleString() + '원';
+
+    // 입력 시 3자리마다 콤마(,) 찍기
+    function handleInput(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value) {
+            input.value = Number(value).toLocaleString();
+        } else {
+            input.value = '';
+        }
+        calculate();
+    }
+
+    // 핵심 로직: 연봉 역산 계산
+    function calculate() {
+        const salaryInput = document.getElementById('totalSalary').value.replace(/,/g, '');
+        const totalSalary = parseInt(salaryInput) || 0;
+
+        if (totalSalary === 0) {
+            document.getElementById('monthlySalary').innerText = '0원';
+            document.getElementById('basePay').innerText = '0원';
+            document.getElementById('overtimePay').innerText = '0원';
+            document.getElementById('otDesc').innerText = '연봉에 따라 자동 적용';
+            document.getElementById('warningText').style.display = 'none';
+            return;
+        }
+
+        // 1. 월급여 산출
+        const monthlySalary = Math.floor(totalSalary / 12);
+        
+        // 2. 고정 식대
+        const mealAllowance = 200000;
+
+        // 3. 연장근로수당 기준 산정 (조건 분기)
+        let otHours = 72; // 월 48시간 * 1.5
+        let otDescText = "월 48시간 * 150% = 월 72시간";
+
+        // 연봉 3,000만원 이하일 경우 월 20시간 (1.5배 적용하여 30시간)으로 계산
+        if (totalSalary <= 30000000) {
+            otHours = 30;
+            otDescText = "월 20시간 * 150% = 월 30시간";
+        }
+
+        // 4. 역산을 위한 통상임금(시급) 계산
+        // (월급 - 식대) = 기본급(209h) + 연장수당(otHours)
+        const totalCalcHours = 209 + otHours;
+        const taxableIncome = monthlySalary - mealAllowance;
+        
+        // 통상시급 산출 (원단위 절사)
+        const hourlyRate = Math.floor(taxableIncome / totalCalcHours);
+
+        // 5. 기본급 및 연장근로수당 도출
+        const basePay = hourlyRate * 209;
+        // 남은 금액 전부를 연장근로수당에 편입시켜 단수(원 단위) 오차를 방지합니다.
+        const overtimePay = taxableIncome - basePay;
+
+        // 6. UI 업데이트
+        document.getElementById('monthlySalary').innerText = monthlySalary.toLocaleString() + '원';
+        document.getElementById('basePay').innerText = basePay.toLocaleString() + '원';
+        document.getElementById('overtimePay').innerText = overtimePay.toLocaleString() + '원';
+        document.getElementById('otDesc').innerText = otDescText;
+
+        // 7. 최저임금 위반 경고 표시 (기본급이 당해년도 최저월급보다 적은지 체크)
+        const warningEl = document.getElementById('warningText');
+        if (basePay < minMonthlyWage) {
+            warningEl.style.display = 'block';
+            warningEl.innerHTML = `🚨 <b>최저임금 미달 알림</b><br>산정된 기본급(${basePay.toLocaleString()}원)이 ${currentYear}년도 최저임금(${minMonthlyWage.toLocaleString()}원)에 미달합니다.`;
+        } else {
+            warningEl.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
