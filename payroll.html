@@ -6,14 +6,14 @@
     <title>최초 근로계약서 연봉 계산기</title>
     <style>
         :root {
-            /* 첨부해주신 로고의 푸른색을 메인 컬러로 지정했습니다 */
-            --primary-color: #4733FF;
+            var(--primary-color): #4733FF;
             --bg-color: #f4f5f7;
             --card-bg: #ffffff;
             --text-main: #333333;
             --text-muted: #666666;
             --border-color: #e0e0e0;
             --danger-color: #ff3b3b;
+            --suggest-color: #00b894;
         }
 
         body {
@@ -43,7 +43,7 @@
         }
 
         .header h1 {
-            color: var(--primary-color);
+            color: #4733FF;
             font-size: 22px;
             margin: 0 0 8px 0;
             font-weight: 700;
@@ -57,7 +57,7 @@
             padding: 14px 16px;
             margin-bottom: 24px;
             font-size: 14px;
-            color: var(--primary-color);
+            color: #4733FF;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -95,7 +95,7 @@
         }
 
         .input-wrapper input:focus {
-            border-color: var(--primary-color);
+            border-color: #4733FF;
         }
 
         .input-wrapper .unit {
@@ -107,16 +107,42 @@
             font-weight: 500;
         }
 
-        .warning {
-            color: var(--danger-color);
+        .message-box {
             font-size: 13px;
             margin-top: 10px;
             display: none;
             font-weight: 500;
             line-height: 1.5;
-            background-color: #fff0f0;
             padding: 10px;
             border-radius: 6px;
+        }
+
+        .warning {
+            color: var(--danger-color);
+            background-color: #fff0f0;
+        }
+
+        .suggestion {
+            color: #00896f;
+            background-color: #e6f8f5;
+        }
+
+        .suggestion .apply-btn {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 4px 10px;
+            background-color: #00b894;
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+        }
+
+        .suggestion .apply-btn:hover {
+            background-color: #00a080;
         }
 
         .result-section {
@@ -140,7 +166,7 @@
         }
 
         .result-row.main .value {
-            color: var(--primary-color);
+            color: #4733FF;
             font-size: 22px;
         }
 
@@ -200,7 +226,8 @@
             <input type="text" id="totalSalary" placeholder="0" oninput="handleInput(this)">
             <span class="unit">원</span>
         </div>
-        <div class="warning" id="warningText"></div>
+        <div class="message-box suggestion" id="suggestionText"></div>
+        <div class="message-box warning" id="warningText"></div>
     </div>
 
     <div class="result-section">
@@ -238,23 +265,19 @@
 </div>
 
 <script>
-    // 연도별 최저임금 데이터 세팅
     const minWageData = {
         2024: { hourly: 9860, monthly: 2060740 },
         2025: { hourly: 10030, monthly: 2096270 },
         2026: { hourly: 10320, monthly: 2156880 }
     };
 
-    // 현재 KST 기준 연도를 가져옵니다. (현재 2026년으로 적용됨)
     const currentYear = new Date().getFullYear();
     const currentMinWage = minWageData[currentYear] || minWageData[2026]; 
     const minMonthlyWage = currentMinWage.monthly;
 
-    // 초기 렌더링 시 최저임금 반영
     document.getElementById('yearLabel').innerText = `${currentYear}년 최저임금 (월)`;
     document.getElementById('minWageDisplay').innerText = minMonthlyWage.toLocaleString() + '원';
 
-    // 입력 시 3자리마다 콤마(,) 찍기
     function handleInput(input) {
         let value = input.value.replace(/[^0-9]/g, '');
         if (value) {
@@ -265,18 +288,43 @@
         calculate();
     }
 
-    // 핵심 로직: 연봉 역산 계산
+    // 추천 연봉 클릭 시 자동 적용하는 함수
+    function applySuggestedSalary(suggestedValue) {
+        const inputEl = document.getElementById('totalSalary');
+        inputEl.value = Number(suggestedValue).toLocaleString();
+        calculate();
+    }
+
     function calculate() {
         const salaryInput = document.getElementById('totalSalary').value.replace(/,/g, '');
         const totalSalary = parseInt(salaryInput) || 0;
+
+        const warningEl = document.getElementById('warningText');
+        const suggestionEl = document.getElementById('suggestionText');
 
         if (totalSalary === 0) {
             document.getElementById('monthlySalary').innerText = '0원';
             document.getElementById('basePay').innerText = '0원';
             document.getElementById('overtimePay').innerText = '0원';
             document.getElementById('otDesc').innerText = '연봉에 따라 자동 적용';
-            document.getElementById('warningText').style.display = 'none';
+            warningEl.style.display = 'none';
+            suggestionEl.style.display = 'none';
             return;
+        }
+
+        // --- 연봉 단위 추천 로직 ---
+        // 총 연봉이 12로 나누었을 때 월급이 1,000원 단위로 떨어지는지 확인 (즉, 12,000으로 나누어 떨어지는지 체크)
+        if (totalSalary % 12000 !== 0) {
+            // 월 급여를 1000원 단위로 올림
+            const rawMonthly = totalSalary / 12;
+            const suggestedMonthly = Math.ceil(rawMonthly / 1000) * 1000;
+            const suggestedTotal = suggestedMonthly * 12;
+
+            suggestionEl.style.display = 'block';
+            suggestionEl.innerHTML = `💡 <b>깔끔한 계산 가이드</b><br>월급여가 1,000원 단위로 떨어지도록 <b>${suggestedTotal.toLocaleString()}원</b>으로 올림해 보세요.<br>
+            <button class="apply-btn" onclick="applySuggestedSalary(${suggestedTotal})">이 금액 적용하기</button>`;
+        } else {
+            suggestionEl.style.display = 'none';
         }
 
         // 1. 월급여 산출
@@ -285,18 +333,16 @@
         // 2. 고정 식대
         const mealAllowance = 200000;
 
-        // 3. 연장근로수당 기준 산정 (조건 분기)
-        let otHours = 72; // 월 48시간 * 1.5
+        // 3. 연장근로수당 기준 산정
+        let otHours = 72;
         let otDescText = "월 48시간 * 150% = 월 72시간";
 
-        // 연봉 3,000만원 이하일 경우 월 20시간 (1.5배 적용하여 30시간)으로 계산
         if (totalSalary <= 30000000) {
             otHours = 30;
             otDescText = "월 20시간 * 150% = 월 30시간";
         }
 
         // 4. 역산을 위한 통상임금(시급) 계산
-        // (월급 - 식대) = 기본급(209h) + 연장수당(otHours)
         const totalCalcHours = 209 + otHours;
         const taxableIncome = monthlySalary - mealAllowance;
         
@@ -305,7 +351,6 @@
 
         // 5. 기본급 및 연장근로수당 도출
         const basePay = hourlyRate * 209;
-        // 남은 금액 전부를 연장근로수당에 편입시켜 단수(원 단위) 오차를 방지합니다.
         const overtimePay = taxableIncome - basePay;
 
         // 6. UI 업데이트
@@ -314,11 +359,10 @@
         document.getElementById('overtimePay').innerText = overtimePay.toLocaleString() + '원';
         document.getElementById('otDesc').innerText = otDescText;
 
-        // 7. 최저임금 위반 경고 표시 (기본급이 당해년도 최저월급보다 적은지 체크)
-        const warningEl = document.getElementById('warningText');
+        // 7. 최저임금 위반 경고 표시
         if (basePay < minMonthlyWage) {
             warningEl.style.display = 'block';
-            warningEl.innerHTML = `🚨 <b>최저임금 미달 알림</b><br>산정된 기본급(${basePay.toLocaleString()}원)이 ${currentYear}년도 최저임금(${minMonthlyWage.toLocaleString()}원)에 미달합니다.`;
+            warningEl.innerHTML = `🚨 <b>최저임금 미달 알림</b><br>산정된 기본급(${basePay.toLocaleString()}원)이 당해년도 최저임금(${minMonthlyWage.toLocaleString()}원)에 미달합니다.`;
         } else {
             warningEl.style.display = 'none';
         }
