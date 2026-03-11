@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>최초 근로계약서 연봉 계산기</title>
+    <title>근로계약서 연봉 계산기</title>
     <style>
         :root {
-            var(--primary-color): #4733FF;
+            --primary-color: #4733FF;
             --bg-color: #f4f5f7;
             --card-bg: #ffffff;
             --text-main: #333333;
@@ -43,7 +43,7 @@
         }
 
         .header h1 {
-            color: #4733FF;
+            color: var(--primary-color);
             font-size: 22px;
             margin: 0 0 8px 0;
             font-weight: 700;
@@ -56,8 +56,8 @@
             border-radius: 8px;
             padding: 14px 16px;
             margin-bottom: 24px;
-            font-size: 14px;
-            color: #4733FF;
+            font-size: 13px;
+            color: var(--primary-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -95,7 +95,7 @@
         }
 
         .input-wrapper input:focus {
-            border-color: #4733FF;
+            border-color: var(--primary-color);
         }
 
         .input-wrapper .unit {
@@ -131,7 +131,7 @@
             display: inline-block;
             margin-top: 6px;
             padding: 4px 10px;
-            background-color: #00b894;
+            background-color: var(--suggest-color);
             color: white;
             border-radius: 4px;
             text-decoration: none;
@@ -166,7 +166,7 @@
         }
 
         .result-row.main .value {
-            color: #4733FF;
+            color: var(--primary-color);
             font-size: 22px;
         }
 
@@ -196,7 +196,7 @@
         .sub-row .desc {
             font-size: 12px;
             color: var(--text-muted);
-            margin-top: 6px;
+            margin-top: 4px;
             line-height: 1.4;
         }
 
@@ -206,17 +206,48 @@
             color: var(--text-main);
             text-align: right;
         }
+
+        /* 복사 버튼 스타일 */
+        .copy-btn {
+            background-color: #ffffff;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border-color: var(--primary-color);
+        }
+
+        .copy-btn.copied {
+            background-color: var(--suggest-color);
+            color: #ffffff;
+            border-color: var(--suggest-color);
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 <body>
 
 <div class="calculator-card">
     <div class="header">
-        <h1>최초 근로계약서 연봉 계산기</h1>
+        <h1>근로계약서 연봉 계산기</h1>
     </div>
 
     <div class="info-box">
-        <span id="yearLabel">당해연도 최저임금 (월)</span>
+        <span id="yearLabel">당해연도 최저임금 (시급)</span>
         <span id="minWageDisplay">- 원</span>
     </div>
 
@@ -240,26 +271,35 @@
         
         <div class="sub-row">
             <div>
-                <div class="label">기본급</div>
-                <div class="desc">자동계산 (역산 방식)</div>
+                <div class="label">식대</div>
+                <div class="desc">비과세 고정 (월 20만 원)</div>
             </div>
-            <div class="value" id="basePay">0원</div>
+            <div class="value" id="mealAllowance">200,000원</div>
         </div>
 
         <div class="sub-row">
             <div>
                 <div class="label">연장근로수당</div>
-                <div class="desc" id="otDesc">연봉에 따라 자동 적용</div>
+                <div class="flex-center" style="margin-top: 4px;">
+                    <div class="desc" id="otDesc" style="margin-top: 0;">연봉에 따라 자동 적용</div>
+                    <button class="copy-btn" onclick="copyText('otDesc', this)">복사</button>
+                </div>
             </div>
-            <div class="value" id="overtimePay">0원</div>
+            <div class="flex-center">
+                <div class="value" id="overtimePay">0원</div>
+                <button class="copy-btn" onclick="copyText('overtimePay', this)">복사</button>
+            </div>
         </div>
 
         <div class="sub-row">
             <div>
-                <div class="label">식대</div>
-                <div class="desc">비과세 고정 (월 20만 원)</div>
+                <div class="label">기본급</div>
+                <div class="desc">월급에서 식대와 수당을 제외한 금액</div>
             </div>
-            <div class="value" id="mealAllowance">200,000원</div>
+            <div class="flex-center">
+                <div class="value" id="basePay">0원</div>
+                <button class="copy-btn" onclick="copyText('basePay', this)">복사</button>
+            </div>
         </div>
     </div>
 </div>
@@ -273,10 +313,10 @@
 
     const currentYear = new Date().getFullYear();
     const currentMinWage = minWageData[currentYear] || minWageData[2026]; 
-    const minMonthlyWage = currentMinWage.monthly;
+    const minHourlyWage = currentMinWage.hourly;
 
-    document.getElementById('yearLabel').innerText = `${currentYear}년 최저임금 (월)`;
-    document.getElementById('minWageDisplay').innerText = minMonthlyWage.toLocaleString() + '원';
+    document.getElementById('yearLabel').innerText = `${currentYear}년 최저시급`;
+    document.getElementById('minWageDisplay').innerText = minHourlyWage.toLocaleString() + '원';
 
     function handleInput(input) {
         let value = input.value.replace(/[^0-9]/g, '');
@@ -288,11 +328,30 @@
         calculate();
     }
 
-    // 추천 연봉 클릭 시 자동 적용하는 함수
     function applySuggestedSalary(suggestedValue) {
         const inputEl = document.getElementById('totalSalary');
         inputEl.value = Number(suggestedValue).toLocaleString();
         calculate();
+    }
+
+    // 텍스트 복사 함수
+    function copyText(elementId, btnElement) {
+        const textToCopy = document.getElementById(elementId).innerText;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalText = btnElement.innerText;
+            btnElement.innerText = '복사완료!';
+            btnElement.classList.add('copied');
+            
+            // 1.5초 후 원래 상태로 복구
+            setTimeout(() => {
+                btnElement.innerText = originalText;
+                btnElement.classList.remove('copied');
+            }, 1500);
+        }).catch(err => {
+            alert('복사에 실패했습니다. 브라우저 설정을 확인해주세요.');
+            console.error(err);
+        });
     }
 
     function calculate() {
@@ -312,10 +371,7 @@
             return;
         }
 
-        // --- 연봉 단위 추천 로직 ---
-        // 총 연봉이 12로 나누었을 때 월급이 1,000원 단위로 떨어지는지 확인 (즉, 12,000으로 나누어 떨어지는지 체크)
         if (totalSalary % 12000 !== 0) {
-            // 월 급여를 1000원 단위로 올림
             const rawMonthly = totalSalary / 12;
             const suggestedMonthly = Math.ceil(rawMonthly / 1000) * 1000;
             const suggestedTotal = suggestedMonthly * 12;
@@ -327,42 +383,33 @@
             suggestionEl.style.display = 'none';
         }
 
-        // 1. 월급여 산출
         const monthlySalary = Math.floor(totalSalary / 12);
-        
-        // 2. 고정 식대
         const mealAllowance = 200000;
 
-        // 3. 연장근로수당 기준 산정
         let otHours = 72;
-        let otDescText = "월 48시간 * 150% = 월 72시간";
+        let otDescText = "월 48시간 x 150% = 월 72시간";
 
         if (totalSalary <= 30000000) {
             otHours = 30;
-            otDescText = "월 20시간 * 150% = 월 30시간";
+            otDescText = "월 20시간 x 150% = 월 30시간";
         }
 
-        // 4. 역산을 위한 통상임금(시급) 계산
         const totalCalcHours = 209 + otHours;
-        const taxableIncome = monthlySalary - mealAllowance;
-        
-        // 통상시급 산출 (원단위 절사)
-        const hourlyRate = Math.floor(taxableIncome / totalCalcHours);
+        const hourlyRate = monthlySalary / totalCalcHours; 
 
-        // 5. 기본급 및 연장근로수당 도출
-        const basePay = hourlyRate * 209;
-        const overtimePay = taxableIncome - basePay;
+        const overtimePay = Math.floor(hourlyRate * otHours);
+        const basePay = monthlySalary - mealAllowance - overtimePay;
 
-        // 6. UI 업데이트
         document.getElementById('monthlySalary').innerText = monthlySalary.toLocaleString() + '원';
         document.getElementById('basePay').innerText = basePay.toLocaleString() + '원';
         document.getElementById('overtimePay').innerText = overtimePay.toLocaleString() + '원';
         document.getElementById('otDesc').innerText = otDescText;
 
-        // 7. 최저임금 위반 경고 표시
-        if (basePay < minMonthlyWage) {
+        const ordinaryHourlyWage = Math.floor(hourlyRate);
+        
+        if (ordinaryHourlyWage < minHourlyWage) {
             warningEl.style.display = 'block';
-            warningEl.innerHTML = `🚨 <b>최저임금 미달 알림</b><br>산정된 기본급(${basePay.toLocaleString()}원)이 당해년도 최저임금(${minMonthlyWage.toLocaleString()}원)에 미달합니다.`;
+            warningEl.innerHTML = `🚨 <b>최저임금 미달 알림</b><br>산정된 통상시급(${ordinaryHourlyWage.toLocaleString()}원)이 당해년도 최저시급(${minHourlyWage.toLocaleString()}원)에 미달합니다. 연봉을 상향 조정해 주세요.`;
         } else {
             warningEl.style.display = 'none';
         }
