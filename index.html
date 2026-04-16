@@ -395,16 +395,17 @@
         const monthlySalary = Math.floor(totalSalary / 12);
         const mealAllowance = 200000;
 
+        // 1차 시도: 48시간 기준 (월 72시간)
         let otHours = 72;
         let otDescText = "월 48시간 x 150% = 월 72시간";
+        let hourlyRate = monthlySalary / (209 + otHours);
 
-        if (totalSalary <= 30000000) {
+        // 48시간 기준 통상시급이 최저시급에 미달하면 자동으로 20시간 기준으로 전환
+        if (Math.floor(hourlyRate) < minHourlyWage) {
             otHours = 30;
             otDescText = "월 20시간 x 150% = 월 30시간";
+            hourlyRate = monthlySalary / (209 + otHours);
         }
-
-        const totalCalcHours = 209 + otHours;
-        const hourlyRate = monthlySalary / totalCalcHours; 
 
         // 역산 순서 (식대, 수당 먼저 계산 후 기본급 도출)
         const overtimePay = Math.floor(hourlyRate * otHours);
