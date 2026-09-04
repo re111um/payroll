@@ -387,6 +387,55 @@
             color: var(--danger-color);
             font-weight: 600;
         }
+
+        /* 통상임금 포함 여부 토글 */
+        .ordinary-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: 6px 0 0 2px;
+            cursor: pointer;
+            font-weight: 500;
+            user-select: none;
+        }
+
+        .ordinary-toggle input {
+            width: 14px;
+            height: 14px;
+            margin: 0;
+            accent-color: var(--primary-color);
+            cursor: pointer;
+        }
+
+        /* 육아수당 자녀 수 선택 */
+        .allowance-children {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-main);
+            font-weight: 600;
+            margin: 8px 0 0 2px;
+            flex-wrap: wrap;
+        }
+
+        .allowance-children select {
+            padding: 6px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background-color: #fff;
+            outline: none;
+        }
+
+        .allowance-children .children-note {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -401,7 +450,7 @@
         <button type="button" class="tab-btn" id="tabBtn-retro" onclick="switchTab('retro')">소급 계산기</button>
     </div>
 
-    <!-- ===================== 탭 1: 근로계약서 연봉 계산기 (기존) ===================== -->
+    <!-- ===================== 탭 1: 근로계약서 연봉 계산기 (기존, 그대로 유지) ===================== -->
     <div id="panel-salary" class="tab-panel active">
 
         <div class="info-box">
@@ -463,6 +512,10 @@
                 <div>
                     <div class="label">식대</div>
                     <div class="desc">비과세 고정 (월 20만 원)</div>
+                    <label class="ordinary-toggle">
+                        <input type="checkbox" id="mealOrdinary" checked onchange="calculate()">
+                        통상임금에 포함 (연장수당 산정 기초)
+                    </label>
                 </div>
                 <div class="value" id="mealAllowance">200,000원</div>
             </div>
@@ -556,12 +609,14 @@
     }
     // ▲▲ 탭 전환 ▲▲
 
-    // ▼▼ 비과세 수당 프리셋 (소득세법 기준 월 비과세 한도). 한도가 바뀌면 cap 값만 변경 ▼▼
+    // ▼▼ 비과세 수당 프리셋 (소득세법 기준 월 비과세 한도 + 통상임금 포함 여부 기본값) ▼▼
+    //   cap      : 월 비과세 한도(원). null이면 한도 안내 없음
+    //   ordinary : 통상임금 포함 여부 기본값(노동법 통상임금 법리 기준). 사용자가 토글로 변경 가능
     const allowancePresets = {
-        childcare: { name: '출산·보육수당(육아수당)', cap: 200000, desc: '6세 이하 자녀 대상 · 월 20만 원까지 비과세' },
-        car:       { name: '자가운전보조금(차량유지비)', cap: 200000, desc: '본인 명의 차량 업무 사용 · 월 20만 원까지 비과세' },
-        research:  { name: '연구보조비', cap: 200000, desc: '연구·교육 종사자 대상 · 월 20만 원까지 비과세' },
-        custom:    { name: '기타 비과세 수당', cap: null, desc: '해당 항목의 비과세 한도를 직접 확인하세요' }
+        childcare: { name: '출산·보육수당(육아수당)', cap: 200000, ordinary: false, desc: '6세 이하 자녀 대상 · 자녀 1인당 월 20만 원까지 비과세(2026.1.1~) · 일률성 결여로 통상임금 제외가 일반적' },
+        car:       { name: '자가운전보조금(차량유지비)', cap: 200000, ordinary: false, desc: '본인 명의 차량 업무 사용 · 월 20만 원까지 비과세 · 실비변상적이라 통상임금 제외가 일반적' },
+        research:  { name: '연구보조비', cap: 200000, ordinary: false, desc: '연구·교육 종사자 대상 · 월 20만 원까지 비과세 · 실비변상적이라 통상임금 제외가 일반적' },
+        custom:    { name: '기타 비과세 수당', cap: null, ordinary: false, desc: '해당 항목의 비과세 한도·통상임금 포함 여부를 직접 확인하세요' }
     };
     // ▲▲ 비과세 수당 프리셋 ▲▲
 
@@ -577,6 +632,8 @@
             .join('');
 
         const wrapper = document.createElement('div');
+        wrapper.className = 'allowance-entry';
+        wrapper.setAttribute('data-entry', rowId);
         wrapper.innerHTML = `
             <div class="allowance-row" data-row="${rowId}">
                 <select onchange="onAllowanceTypeChange('${rowId}')">${optionsHtml}</select>
@@ -586,21 +643,33 @@
                 </div>
                 <button type="button" class="remove-btn" title="삭제" onclick="removeAllowanceRow('${rowId}')">×</button>
             </div>
+            <div class="allowance-children" data-children-wrap="${rowId}" style="display:none;">
+                <span>자녀 수</span>
+                <select data-children="${rowId}" onchange="calculate()">
+                    <option value="1">1명</option>
+                    <option value="2">2명</option>
+                    <option value="3">3명</option>
+                    <option value="4">4명</option>
+                    <option value="5">5명 이상</option>
+                </select>
+                <span class="children-note">위 입력액(1인당 월) × 자녀 수 = 총 지급액</span>
+            </div>
+            <label class="ordinary-toggle">
+                <input type="checkbox" data-ordinary="${rowId}" onchange="calculate()">
+                통상임금에 포함 (연장수당 산정 기초)
+            </label>
             <div class="allowance-hint" data-hint="${rowId}"></div>
         `;
-        // 한 묶음(행 + 힌트)을 그대로 추가
-        while (wrapper.firstElementChild) {
-            container.appendChild(wrapper.firstElementChild);
-        }
+        // 수당 항목 한 묶음(행 + 자녀 수 + 통상임금 토글 + 힌트)을 컨테이너째 추가
+        container.appendChild(wrapper);
 
         onAllowanceTypeChange(rowId); // 초기 힌트/금액 세팅
     }
 
     function removeAllowanceRow(rowId) {
-        const row = document.querySelector(`[data-row="${rowId}"]`);
-        const hint = document.querySelector(`[data-hint="${rowId}"]`);
-        if (row) row.remove();
-        if (hint) hint.remove();
+        // 항목 컨테이너를 통째로 제거 → 자녀 수 선택·통상임금 토글·힌트까지 함께 삭제
+        const entry = document.querySelector(`[data-entry="${rowId}"]`);
+        if (entry) entry.remove();
         calculate();
     }
 
@@ -610,12 +679,26 @@
         const type = row.querySelector('select').value;
         const input = row.querySelector('input');
         const preset = allowancePresets[type];
+        const isChildcare = (type === 'childcare');
 
-        // 금액이 비어 있고 한도가 있으면 한도 금액을 기본값으로 채워줌
+        // 육아수당이면 자녀 수 선택을 노출 (이때 입력액은 '자녀 1인당 월 지급액'을 의미)
+        const childrenWrap = document.querySelector(`[data-children-wrap="${rowId}"]`);
+        if (childrenWrap) childrenWrap.style.display = isChildcare ? 'flex' : 'none';
+
+        // 금액이 비어 있으면 기본값 채워주기 (육아수당은 1인당 10만 원, 그 외는 비과세 한도)
         const current = input.value.replace(/[^0-9]/g, '');
-        if (!current && preset.cap) {
-            input.value = preset.cap.toLocaleString();
+        if (!current) {
+            if (isChildcare) {
+                input.value = (100000).toLocaleString();
+            } else if (preset.cap) {
+                input.value = preset.cap.toLocaleString();
+            }
         }
+
+        // 통상임금 포함 여부를 해당 항목의 법리상 기본값으로 세팅
+        const checkbox = document.querySelector(`[data-ordinary="${rowId}"]`);
+        if (checkbox) checkbox.checked = preset.ordinary;
+
         calculate();
     }
 
@@ -632,23 +715,40 @@
         rows.forEach(row => {
             const rowId = row.getAttribute('data-row');
             const type = row.querySelector('select').value;
-            const amount = parseInt(row.querySelector('input').value.replace(/[^0-9]/g, '')) || 0;
+            const inputAmount = parseInt(row.querySelector('input').value.replace(/[^0-9]/g, '')) || 0;
             const preset = allowancePresets[type];
-            const overCap = preset.cap !== null && amount > preset.cap;
+            const ordinaryCheckbox = document.querySelector(`[data-ordinary="${rowId}"]`);
+            const ordinary = ordinaryCheckbox ? ordinaryCheckbox.checked : false;
+
+            // 육아수당이면 입력액은 '자녀 1인당 월 지급액' → 자녀 수를 곱해 총 지급액 산출
+            let amount = inputAmount;
+            let displayName = preset.name;
+            let effectiveCap = preset.cap; // 적용 비과세 한도(null이면 한도 없음)
+            if (type === 'childcare') {
+                const childSel = document.querySelector(`[data-children="${rowId}"]`);
+                const children = childSel ? (parseInt(childSel.value) || 1) : 1;
+                amount = inputAmount * children;
+                displayName = `${preset.name} (자녀 ${children}명${children >= 5 ? '+' : ''})`;
+                // 2026.1.1~ 출산·보육수당 비과세 한도는 '자녀 1인당 월 20만 원' → 자녀 수만큼 한도 증가
+                effectiveCap = preset.cap !== null ? preset.cap * children : null;
+            }
+
+            // 적용 한도(육아수당은 자녀 수만큼 증액된 한도) 기준으로 총 지급액과 비교
+            const overCap = effectiveCap !== null && amount > effectiveCap;
 
             // 행별 안내문(비과세 한도 / 초과 경고)
             const hintEl = document.querySelector(`[data-hint="${rowId}"]`);
             if (hintEl) {
                 if (overCap) {
                     hintEl.classList.add('over-cap');
-                    hintEl.innerText = `⚠ 비과세 한도(월 ${preset.cap.toLocaleString()}원)를 초과했습니다. 초과분은 과세 대상입니다.`;
+                    hintEl.innerText = `⚠ 비과세 한도(월 ${effectiveCap.toLocaleString()}원)를 초과했습니다. 초과분(${(amount - effectiveCap).toLocaleString()}원)은 과세 대상입니다.`;
                 } else {
                     hintEl.classList.remove('over-cap');
                     hintEl.innerText = preset.desc;
                 }
             }
 
-            items.push({ name: preset.name, amount, overCap });
+            items.push({ name: displayName, amount, overCap, ordinary });
         });
         return items;
     }
@@ -731,22 +831,32 @@
 
         const monthlySalary = Math.floor(totalSalary / 12);
         const mealAllowance = 200000;
+        const mealOrdinary = document.getElementById('mealOrdinary').checked;
+
+        // 통상임금 산정 기준: 항목별 '통상임금 포함' 여부에 따라 비통상임금 항목만 제외
+        //   - 통상임금 포함 항목(예: 일률·정액 식대)은 연장근로수당 산정 기초에 반영
+        //   - 통상임금 제외 항목(예: 자가운전보조금·육아수당 등 실비변상·조건부)은 제외
+        const nonOrdinaryTotal =
+            (mealOrdinary ? 0 : mealAllowance) +
+            allowances.filter(a => !a.ordinary).reduce((sum, a) => sum + a.amount, 0);
+        const ordinaryWageBase = monthlySalary - nonOrdinaryTotal;
 
         // 1차 시도: 48시간 기준 (월 72시간)
         let otHours = 72;
         let otDescText = "월 48시간 x 150% = 월 72시간";
-        let hourlyRate = monthlySalary / (209 + otHours);
+        let hourlyRate = ordinaryWageBase / (209 + otHours);
 
         // 48시간 기준 통상시급이 최저시급에 미달하면 자동으로 20시간 기준으로 전환
         if (Math.floor(hourlyRate) < minHourlyWage) {
             otHours = 30;
             otDescText = "월 20시간 x 150% = 월 30시간";
-            hourlyRate = monthlySalary / (209 + otHours);
+            hourlyRate = ordinaryWageBase / (209 + otHours);
         }
 
-        // 역산 순서 (식대, 비과세 수당, 연장근로수당 먼저 계산 후 기본급 도출)
+        // 역산: 월급여에서 식대·모든 비과세 수당·연장근로수당을 빼면 기본급
+        // (통상임금 포함 여부와 무관하게, 실제 지급액 기준으로 차감)
         const overtimePay = Math.floor(hourlyRate * otHours);
-        const basePay = monthlySalary - mealAllowance - overtimePay - allowanceTotal;
+        const basePay = monthlySalary - mealAllowance - allowanceTotal - overtimePay;
 
         document.getElementById('monthlySalary').innerText = monthlySalary.toLocaleString() + '원';
         document.getElementById('basePay').innerText = basePay.toLocaleString() + '원';
@@ -759,7 +869,7 @@
             <div class="sub-row">
                 <div>
                     <div class="label">${a.name}</div>
-                    <div class="desc">비과세 수당${a.overCap ? ' · ⚠ 비과세 한도 초과분 과세 대상' : ''}</div>
+                    <div class="desc">비과세 수당 · 통상임금 ${a.ordinary ? '포함' : '제외'}${a.overCap ? ' · ⚠ 비과세 한도 초과분 과세 대상' : ''}</div>
                 </div>
                 <div class="flex-center">
                     <div class="value" id="extraValue_${idx}">${a.amount.toLocaleString()}원</div>
