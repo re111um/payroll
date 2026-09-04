@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>급여 계산기</title>
+    <style>
+        :root {
+            --primary-color: #4733FF;
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #e0e0e0;
+            --danger-color: #ff3b3b;
+            --suggest-color: #00b894;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        /* 전체 카드 넓이와 안쪽 여백을 넓혀서 시원하게 배치 */
+        .calculator-card {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 550px;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* 글씨 크기는 원래의 깔끔한 크기로 복구 */
+        .header h1 {
+            color: var(--primary-color);
+            font-size: 22px;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        /* 탭 전환 UI */
+        .tab-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 28px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background-color: #fff;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .info-box {
+            background-color: rgba(71, 51, 255, 0.05);
+            border: 1px solid rgba(71, 51, 255, 0.2);
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+            font-size: 13px;
+            color: var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        /* 입력창 상하 여백을 늘려 클릭 영역 확보 */
+        .input-wrapper input {
+            width: 100%;
+            padding: 16px 45px 16px 18px;
+            font-size: 18px;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+            text-align: right;
+            color: var(--text-main);
+        }
+
+        .input-wrapper input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .input-wrapper .unit {
+            position: absolute;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 15px;
+        }
+
+        input[type="date"] {
+            width: 100%;
+            padding: 16px 18px;
+            font-size: 16px;
+            font-weight: 700;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+            color: var(--text-main);
+        }
+
+        input[type="date"]:focus {
+            border-color: var(--primary-color);
+        }
+
+        .message-box {
+            font-size: 13px;
+            margin-top: 12px;
+            display: none;
+            font-weight: 500;
+            line-height: 1.5;
+            padding: 12px;
+            border-radius: 6px;
+        }
+
+        .warning {
+            color: var(--danger-color);
+            background-color: #fff0f0;
+        }
+
+        .suggestion {
+            color: #00896f;
+            background-color: #e6f8f5;
+        }
+
+        .suggestion .apply-btn {
+            display: inline-block;
+            margin-top: 8px;
+            padding: 6px 12px;
+            background-color: var(--suggest-color);
+            color: white;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 12px;
+            cursor: pointer;
+            border: none;
+            font-weight: 600;
+        }
+
+        .suggestion .apply-btn:hover {
+            background-color: #00a080;
+        }
+
+        .result-section {
+            border-top: 2px dashed var(--border-color);
+            padding-top: 28px;
+            margin-top: 28px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .result-row.main {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 28px;
+        }
+
+        .result-row.main .value {
+            color: var(--primary-color);
+            font-size: 22px;
+        }
+
+        .composition-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 14px;
+        }
+
+        /* 각 결과 행의 안쪽 여백을 넓혀서 답답하지 않게 조절 */
+        .sub-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 18px;
+            background-color: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .sub-row .label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .sub-row .desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .sub-row .value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-main);
+            text-align: right;
+        }
+
+        /* 복사 버튼 스타일 (클릭하기 편하게 여백만 살짝 늘림) */
+        .copy-btn {
+            background-color: #ffffff;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .copy-btn:hover {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            border-color: var(--primary-color);
+        }
+
+        .copy-btn.copied {
+            background-color: var(--suggest-color);
+            color: #ffffff;
+            border-color: var(--suggest-color);
+        }
+
+        .flex-center {
+            display: flex;
+            align-items: center;
+        }
+
+        /* 비과세 수당 추가 영역 */
+        .add-allowance-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px dashed var(--primary-color);
+            background-color: rgba(71, 51, 255, 0.04);
+            color: var(--primary-color);
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .add-allowance-btn:hover {
+            background-color: rgba(71, 51, 255, 0.1);
+        }
+
+        .allowance-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .allowance-row select {
+            flex: 1 1 45%;
+            min-width: 0;
+            padding: 12px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-main);
+            background-color: #fff;
+            outline: none;
+        }
+
+        .allowance-row select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .allowance-row .input-wrapper {
+            flex: 1 1 40%;
+            min-width: 0;
+        }
+
+        .allowance-row .input-wrapper input {
+            padding: 12px 32px 12px 12px;
+            font-size: 15px;
+        }
+
+        .allowance-row .input-wrapper .unit {
+            right: 12px;
+            font-size: 13px;
+        }
+
+        .allowance-row .remove-btn {
+            flex: 0 0 auto;
+            width: 34px;
+            height: 46px;
+            border: 1px solid var(--border-color);
+            background-color: #fff;
+            color: var(--text-muted);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .allowance-row .remove-btn:hover {
+            background-color: var(--danger-color);
+            color: #fff;
+            border-color: var(--danger-color);
+        }
+
+        .allowance-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin: 0 0 12px 2px;
+            line-height: 1.4;
+        }
+
+        .allowance-hint.over-cap {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calculator-card">
+    <div class="header">
+        <h1>급여 계산기</h1>
+    </div>
+
+    <div class="tab-bar">
+        <button type="button" class="tab-btn active" id="tabBtn-salary" onclick="switchTab('salary')">연봉 계산기</button>
+        <button type="button" class="tab-btn" id="tabBtn-retro" onclick="switchTab('retro')">소급 계산기</button>
+    </div>
+
+    <!-- ===================== 탭 1: 근로계약서 연봉 계산기 (기존) ===================== -->
+    <div id="panel-salary" class="tab-panel active">
+
+        <div class="info-box">
+            <span id="yearLabel">당해연도 최저임금 (시급)</span>
+            <span id="minWageDisplay">- 원</span>
+        </div>
+
+        <div class="form-group">
+            <label for="totalSalary">총 연봉 (직접 입력)</label>
+            <div class="input-wrapper">
+                <input type="text" id="totalSalary" placeholder="0" oninput="handleInput(this)">
+                <span class="unit">원</span>
+            </div>
+            <div class="message-box suggestion" id="suggestionText"></div>
+            <div class="message-box warning" id="warningText"></div>
+        </div>
+
+        <div class="form-group">
+            <label>추가 비과세 수당 (선택)</label>
+            <div id="allowanceInputs"></div>
+            <button type="button" class="add-allowance-btn" onclick="addAllowanceRow()">+ 비과세 수당 추가</button>
+            <div class="message-box warning" id="allowanceWarning"></div>
+        </div>
+
+        <div class="result-section">
+            <div class="result-row main">
+                <span>월급여 (세전)</span>
+                <span class="value" id="monthlySalary">0원</span>
+            </div>
+
+            <div class="composition-title">임금 구성</div>
+
+            <div class="sub-row">
+                <div>
+                    <div class="label">기본급</div>
+                    <div class="desc">월급에서 식대와 수당을 제외한 금액</div>
+                </div>
+                <div class="flex-center">
+                    <div class="value" id="basePay">0원</div>
+                    <button class="copy-btn" onclick="copyText('basePay', this)">복사</button>
+                </div>
+            </div>
+
+            <div class="sub-row">
+                <div>
+                    <div class="label">연장근로수당</div>
+                    <div class="flex-center" style="margin-top: 4px;">
+                        <div class="desc" id="otDesc" style="margin-top: 0;">연봉에 따라 자동 적용</div>
+                        <button class="copy-btn" onclick="copyText('otDesc', this)">복사</button>
+                    </div>
+                </div>
+                <div class="flex-center">
+                    <div class="value" id="overtimePay">0원</div>
+                    <button class="copy-btn" onclick="copyText('overtimePay', this)">복사</button>
+                </div>
+            </div>
+
+            <div class="sub-row">
+                <div>
+                    <div class="label">식대</div>
+                    <div class="desc">비과세 고정 (월 20만 원)</div>
+                </div>
+                <div class="value" id="mealAllowance">200,000원</div>
+            </div>
+
+            <div id="extraComposition"></div>
+        </div>
+    </div>
+
+    <!-- ===================== 탭 2: 소급 계산기 (신규) ===================== -->
+    <div id="panel-retro" class="tab-panel">
+
+        <div class="info-box" style="display:block;">
+            근로계약일(인상 발효일)과 소급 종료일을 기준으로, 발효 시작월은 일할계산하고 이후 달은 전액 적용해 세전 소급액을 계산합니다.
+        </div>
+
+        <div class="form-group">
+            <label for="retroStartDate">근로계약일 (인상 발효일 = 소급 시작일)</label>
+            <input type="date" id="retroStartDate" oninput="calculateRetro()">
+        </div>
+
+        <div class="form-group">
+            <label for="retroEndDate">소급 종료일</label>
+            <input type="date" id="retroEndDate" oninput="calculateRetro()">
+        </div>
+
+        <div class="form-group">
+            <label for="retroOldSalary">전 연봉</label>
+            <div class="input-wrapper">
+                <input type="text" id="retroOldSalary" placeholder="0" oninput="handleRetroInput(this)">
+                <span class="unit">원</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="retroNewSalary">현 연봉</label>
+            <div class="input-wrapper">
+                <input type="text" id="retroNewSalary" placeholder="0" oninput="handleRetroInput(this)">
+                <span class="unit">원</span>
+            </div>
+            <div class="message-box warning" id="retroWarning"></div>
+        </div>
+
+        <div class="result-section" id="retroResultSection" style="display:none;">
+            <div class="sub-row">
+                <div>
+                    <div class="label">인상급여 (월)</div>
+                </div>
+                <div class="flex-center">
+                    <div class="value" id="retroSalaryDesc">-</div>
+                    <button class="copy-btn" onclick="copyText('retroSalaryDesc', this)">복사</button>
+                </div>
+            </div>
+
+            <div class="composition-title">월별 소급 내역</div>
+            <div id="retroMonthly"></div>
+
+            <div class="result-row main" style="margin-top: 8px;">
+                <span>소급 합계</span>
+                <div class="flex-center">
+                    <span class="value" id="retroTotal">0원</span>
+                    <button class="copy-btn" onclick="copyText('retroTotal', this)">복사</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+    const minWageData = {
+        2024: { hourly: 9860, monthly: 2060740 },
+        2025: { hourly: 10030, monthly: 2096270 },
+        2026: { hourly: 10320, monthly: 2156880 }
+    };
+//▲▲ 최저 시급이 바뀌면 여기만 변경 ▲▲//
+
+    const currentYear = new Date().getFullYear();
+    const currentMinWage = minWageData[currentYear] || minWageData[2026];
+    const minHourlyWage = currentMinWage.hourly;
+
+    document.getElementById('yearLabel').innerText = `${currentYear}년 최저시급`;
+    document.getElementById('minWageDisplay').innerText = minHourlyWage.toLocaleString() + '원';
+
+    // ▼▼ 탭 전환 ▼▼
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('panel-' + tabName).classList.add('active');
+        document.getElementById('tabBtn-' + tabName).classList.add('active');
+    }
+    // ▲▲ 탭 전환 ▲▲
+
+    // ▼▼ 비과세 수당 프리셋 (소득세법 기준 월 비과세 한도). 한도가 바뀌면 cap 값만 변경 ▼▼
+    const allowancePresets = {
+        childcare: { name: '출산·보육수당(육아수당)', cap: 200000, desc: '6세 이하 자녀 대상 · 월 20만 원까지 비과세' },
+        car:       { name: '자가운전보조금(차량유지비)', cap: 200000, desc: '본인 명의 차량 업무 사용 · 월 20만 원까지 비과세' },
+        research:  { name: '연구보조비', cap: 200000, desc: '연구·교육 종사자 대상 · 월 20만 원까지 비과세' },
+        custom:    { name: '기타 비과세 수당', cap: null, desc: '해당 항목의 비과세 한도를 직접 확인하세요' }
+    };
+    // ▲▲ 비과세 수당 프리셋 ▲▲
+
+    let allowanceSeq = 0;
+
+    function addAllowanceRow() {
+        allowanceSeq += 1;
+        const rowId = 'allow_' + allowanceSeq;
+        const container = document.getElementById('allowanceInputs');
+
+        const optionsHtml = Object.keys(allowancePresets)
+            .map(key => `<option value="${key}">${allowancePresets[key].name}</option>`)
+            .join('');
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `
+            <div class="allowance-row" data-row="${rowId}">
+                <select onchange="onAllowanceTypeChange('${rowId}')">${optionsHtml}</select>
+                <div class="input-wrapper">
+                    <input type="text" placeholder="0" oninput="onAllowanceAmountInput(this)">
+                    <span class="unit">원</span>
+                </div>
+                <button type="button" class="remove-btn" title="삭제" onclick="removeAllowanceRow('${rowId}')">×</button>
+            </div>
+            <div class="allowance-hint" data-hint="${rowId}"></div>
+        `;
+        // 한 묶음(행 + 힌트)을 그대로 추가
+        while (wrapper.firstElementChild) {
+            container.appendChild(wrapper.firstElementChild);
+        }
+
+        onAllowanceTypeChange(rowId); // 초기 힌트/금액 세팅
+    }
+
+    function removeAllowanceRow(rowId) {
+        const row = document.querySelector(`[data-row="${rowId}"]`);
+        const hint = document.querySelector(`[data-hint="${rowId}"]`);
+        if (row) row.remove();
+        if (hint) hint.remove();
+        calculate();
+    }
+
+    function onAllowanceTypeChange(rowId) {
+        const row = document.querySelector(`[data-row="${rowId}"]`);
+        if (!row) return;
+        const type = row.querySelector('select').value;
+        const input = row.querySelector('input');
+        const preset = allowancePresets[type];
+
+        // 금액이 비어 있고 한도가 있으면 한도 금액을 기본값으로 채워줌
+        const current = input.value.replace(/[^0-9]/g, '');
+        if (!current && preset.cap) {
+            input.value = preset.cap.toLocaleString();
+        }
+        calculate();
+    }
+
+    function onAllowanceAmountInput(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        input.value = value ? Number(value).toLocaleString() : '';
+        calculate();
+    }
+
+    // 입력된 모든 비과세 수당 행을 읽어 합계와 한도 초과 여부를 반환
+    function readAllowances() {
+        const rows = document.querySelectorAll('#allowanceInputs .allowance-row');
+        const items = [];
+        rows.forEach(row => {
+            const rowId = row.getAttribute('data-row');
+            const type = row.querySelector('select').value;
+            const amount = parseInt(row.querySelector('input').value.replace(/[^0-9]/g, '')) || 0;
+            const preset = allowancePresets[type];
+            const overCap = preset.cap !== null && amount > preset.cap;
+
+            // 행별 안내문(비과세 한도 / 초과 경고)
+            const hintEl = document.querySelector(`[data-hint="${rowId}"]`);
+            if (hintEl) {
+                if (overCap) {
+                    hintEl.classList.add('over-cap');
+                    hintEl.innerText = `⚠ 비과세 한도(월 ${preset.cap.toLocaleString()}원)를 초과했습니다. 초과분은 과세 대상입니다.`;
+                } else {
+                    hintEl.classList.remove('over-cap');
+                    hintEl.innerText = preset.desc;
+                }
+            }
+
+            items.push({ name: preset.name, amount, overCap });
+        });
+        return items;
+    }
+
+    function handleInput(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value) {
+            input.value = Number(value).toLocaleString();
+        } else {
+            input.value = '';
+        }
+        calculate();
+    }
+
+    function applySuggestedSalary(suggestedValue) {
+        const inputEl = document.getElementById('totalSalary');
+        inputEl.value = Number(suggestedValue).toLocaleString();
+        calculate();
+    }
+
+    // 텍스트 복사 함수 (원 제거 및 서식 없는 텍스트 복사)
+    function copyText(elementId, btnElement) {
+        let textToCopy = document.getElementById(elementId).innerText;
+
+        // 끝에 '원'이 포함되어 있으면 제거 (공백도 함께 다듬음)
+        textToCopy = textToCopy.replace(/원$/, '').trim();
+
+        // 브라우저의 클립보드 API는 서식 없는 단순 텍스트만 복사합니다.
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalText = btnElement.innerText;
+            btnElement.innerText = '복사완료!';
+            btnElement.classList.add('copied');
+
+            // 1.5초 후 원래 상태로 복구
+            setTimeout(() => {
+                btnElement.innerText = originalText;
+                btnElement.classList.remove('copied');
+            }, 1500);
+        }).catch(err => {
+            alert('복사에 실패했습니다. 브라우저 설정을 확인해주세요.');
+            console.error(err);
+        });
+    }
+
+    function calculate() {
+        const salaryInput = document.getElementById('totalSalary').value.replace(/,/g, '');
+        const totalSalary = parseInt(salaryInput) || 0;
+
+        const warningEl = document.getElementById('warningText');
+        const suggestionEl = document.getElementById('suggestionText');
+        const allowanceWarningEl = document.getElementById('allowanceWarning');
+
+        // 비과세 수당 행을 읽으면서 행별 한도 안내문도 함께 갱신
+        const allowances = readAllowances();
+        const allowanceTotal = allowances.reduce((sum, a) => sum + a.amount, 0);
+
+        if (totalSalary === 0) {
+            document.getElementById('monthlySalary').innerText = '0원';
+            document.getElementById('basePay').innerText = '0원';
+            document.getElementById('overtimePay').innerText = '0원';
+            document.getElementById('otDesc').innerText = '연봉에 따라 자동 적용';
+            document.getElementById('extraComposition').innerHTML = '';
+            warningEl.style.display = 'none';
+            suggestionEl.style.display = 'none';
+            allowanceWarningEl.style.display = 'none';
+            return;
+        }
+
+        if (totalSalary % 12000 !== 0) {
+            const rawMonthly = totalSalary / 12;
+            const suggestedMonthly = Math.ceil(rawMonthly / 1000) * 1000;
+            const suggestedTotal = suggestedMonthly * 12;
+
+            suggestionEl.style.display = 'block';
+            suggestionEl.innerHTML = `💡 <b>깔끔한 계산 가이드</b><br>월급여가 1,000원 단위로 떨어지도록 <b>${suggestedTotal.toLocaleString()}원</b>으로 올림해 보세요.<br>
+            <button class="apply-btn" onclick="applySuggestedSalary(${suggestedTotal})">이 금액 적용하기</button>`;
+        } else {
+            suggestionEl.style.display = 'none';
+        }
+
+        const monthlySalary = Math.floor(totalSalary / 12);
+        const mealAllowance = 200000;
+
+        // 1차 시도: 48시간 기준 (월 72시간)
+        let otHours = 72;
+        let otDescText = "월 48시간 x 150% = 월 72시간";
+        let hourlyRate = monthlySalary / (209 + otHours);
+
+        // 48시간 기준 통상시급이 최저시급에 미달하면 자동으로 20시간 기준으로 전환
+        if (Math.floor(hourlyRate) < minHourlyWage) {
+            otHours = 30;
+            otDescText = "월 20시간 x 150% = 월 30시간";
+            hourlyRate = monthlySalary / (209 + otHours);
+        }
+
+        // 역산 순서 (식대, 비과세 수당, 연장근로수당 먼저 계산 후 기본급 도출)
+        const overtimePay = Math.floor(hourlyRate * otHours);
+        const basePay = monthlySalary - mealAllowance - overtimePay - allowanceTotal;
+
+        document.getElementById('monthlySalary').innerText = monthlySalary.toLocaleString() + '원';
+        document.getElementById('basePay').innerText = basePay.toLocaleString() + '원';
+        document.getElementById('overtimePay').innerText = overtimePay.toLocaleString() + '원';
+        document.getElementById('otDesc').innerText = otDescText;
+
+        // 추가된 비과세 수당을 임금 구성에 표시
+        const extraEl = document.getElementById('extraComposition');
+        extraEl.innerHTML = allowances.map((a, idx) => `
+            <div class="sub-row">
+                <div>
+                    <div class="label">${a.name}</div>
+                    <div class="desc">비과세 수당${a.overCap ? ' · ⚠ 비과세 한도 초과분 과세 대상' : ''}</div>
+                </div>
+                <div class="flex-center">
+                    <div class="value" id="extraValue_${idx}">${a.amount.toLocaleString()}원</div>
+                    <button class="copy-btn" onclick="copyText('extraValue_${idx}', this)">복사</button>
+                </div>
+            </div>
+        `).join('');
+
+        // 비과세 수당 관련 경고 (한도 초과 / 기본급 부족)
+        const overCapItems = allowances.filter(a => a.overCap);
+        if (basePay < 0) {
+            allowanceWarningEl.style.display = 'block';
+            allowanceWarningEl.innerHTML = `🚨 <b>구성 초과 알림</b><br>식대·비과세 수당·연장근로수당의 합이 월급여를 초과하여 기본급이 음수(${basePay.toLocaleString()}원)가 됩니다. 수당 금액을 줄이거나 연봉을 올려주세요.`;
+        } else if (overCapItems.length > 0) {
+            allowanceWarningEl.style.display = 'block';
+            allowanceWarningEl.innerHTML = `⚠ <b>비과세 한도 초과</b><br>${overCapItems.map(a => a.name).join(', ')} 항목이 비과세 한도를 초과했습니다. 초과분은 과세 대상이니 확인해 주세요.`;
+        } else {
+            allowanceWarningEl.style.display = 'none';
+        }
+
+        const ordinaryHourlyWage = Math.floor(hourlyRate);
+
+        if (ordinaryHourlyWage < minHourlyWage) {
+            warningEl.style.display = 'block';
+            warningEl.innerHTML = `🚨 <b>최저임금 미달 알림</b><br>산정된 통상시급(${ordinaryHourlyWage.toLocaleString()}원)이 당해년도 최저시급(${minHourlyWage.toLocaleString()}원)에 미달합니다. 연봉을 상향 조정해 주세요.`;
+        } else {
+            warningEl.style.display = 'none';
+        }
+    }
+
+    // ===================== 소급 계산기 로직 =====================
+
+    function handleRetroInput(input) {
+        let value = input.value.replace(/[^0-9]/g, '');
+        input.value = value ? Number(value).toLocaleString() : '';
+        calculateRetro();
+    }
+
+    // 'YYYY-MM-DD' 문자열을 로컬 타임존 기준 Date로 변환 (UTC 파싱으로 인한 하루 밀림 방지)
+    function parseDateInput(str) {
+        if (!str) return null;
+        const [y, m, d] = str.split('-').map(Number);
+        return new Date(y, m - 1, d);
+    }
+
+    function calculateRetro() {
+        const startDate = parseDateInput(document.getElementById('retroStartDate').value);
+        const endDate = parseDateInput(document.getElementById('retroEndDate').value);
+        const oldSalary = parseInt(document.getElementById('retroOldSalary').value.replace(/,/g, '')) || 0;
+        const newSalary = parseInt(document.getElementById('retroNewSalary').value.replace(/,/g, '')) || 0;
+
+        const warningEl = document.getElementById('retroWarning');
+        const resultSection = document.getElementById('retroResultSection');
+
+        if (!startDate || !endDate || !oldSalary || !newSalary) {
+            warningEl.style.display = 'none';
+            resultSection.style.display = 'none';
+            return;
+        }
+
+        if (startDate > endDate) {
+            warningEl.style.display = 'block';
+            warningEl.innerHTML = '🚨 소급 종료일이 근로계약일(소급 시작일)보다 빠릅니다. 날짜를 확인해 주세요.';
+            resultSection.style.display = 'none';
+            return;
+        }
+        warningEl.style.display = 'none';
+
+        const oldMonthly = Math.floor(oldSalary / 12);
+        const newMonthly = Math.floor(newSalary / 12);
+        const diff = newMonthly - oldMonthly;
+
+        const sameYear = startDate.getFullYear() === endDate.getFullYear();
+        const rows = [];
+        let total = 0;
+
+        // 시작월의 1일부터 순회하며 월별로 겹치는 구간(일수)만큼 일할계산
+        let cursorY = startDate.getFullYear();
+        let cursorM = startDate.getMonth(); // 0-indexed
+
+        while (new Date(cursorY, cursorM, 1) <= endDate) {
+            const totalDaysInMonth = new Date(cursorY, cursorM + 1, 0).getDate();
+            const monthStart = new Date(cursorY, cursorM, 1);
+            const monthEnd = new Date(cursorY, cursorM, totalDaysInMonth);
+
+            const effStart = monthStart > startDate ? monthStart : startDate;
+            const effEnd = monthEnd < endDate ? monthEnd : endDate;
+            const daysApplied = Math.round((effEnd - effStart) / 86400000) + 1;
+
+            const amount = (daysApplied === totalDaysInMonth)
+                ? diff
+                : Math.round(diff * daysApplied / totalDaysInMonth);
+
+            total += amount;
+
+            const label = sameYear ? `${cursorM + 1}월` : `${cursorY}년 ${cursorM + 1}월`;
+            const suffix = (daysApplied === totalDaysInMonth) ? '' : `(${daysApplied}/${totalDaysInMonth}일 적용)`;
+
+            rows.push({ label, suffix, amount });
+
+            cursorM += 1;
+            if (cursorM > 11) { cursorM = 0; cursorY += 1; }
+        }
+
+        // 렌더링
+        document.getElementById('retroSalaryDesc').innerText =
+            `${oldMonthly.toLocaleString()}원 → ${newMonthly.toLocaleString()}원 (차액 ${diff.toLocaleString()}원)`;
+
+        const monthlyEl = document.getElementById('retroMonthly');
+        monthlyEl.innerHTML = rows.map((r, idx) => `
+            <div class="sub-row">
+                <div class="label">${r.label}${r.suffix}</div>
+                <div class="flex-center">
+                    <div class="value" id="retroMonthValue_${idx}">${r.amount.toLocaleString()}원</div>
+                    <button class="copy-btn" onclick="copyText('retroMonthValue_${idx}', this)">복사</button>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('retroTotal').innerText = total.toLocaleString() + '원';
+        resultSection.style.display = 'block';
+    }
+</script>
+
+</body>
+</html>
